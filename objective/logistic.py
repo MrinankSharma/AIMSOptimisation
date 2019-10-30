@@ -16,16 +16,22 @@ class Logistic_Gradient(Objective):
 
     def task_error(self, w, x, y):
         self._validate_inputs(w, x, y)
-        # TODO: Compute cross entropy prediction error
-        error = None
+        act_mat = torch.matmul(x, w)
+        pred = torch.argmax(act_mat, 1)
+        # this throws a user warning for some reason ... annoying
+        error = torch.mean(torch.tensor(pred != y).clone().float())
         return error
 
     def oracle(self, w, x, y):
         self._validate_inputs(w, x, y)
         # regularization hyper-parameter
         mu = self.hparams.mu
-        # TODO: Compute objective value
-        obj = None
-        # TODO: compute gradient
-        dw = None
+        # Compute objective value
+        act_mat = torch.matmul(x, w)
+        per_point_loss = torch.logsumexp(act_mat, 1).view(-1, 1) - torch.gather(act_mat, 1, y.view(-1, 1))
+        # print(per_point_loss)
+        obj = torch.mean(per_point_loss) + (mu/2) * (torch.norm(w, p="fro")**2)
+        # obj = torch.mean(per_point_loss) + (mu/2) * torch.norm(w, p="fro")**2
+        obj.backward()
+        dw = w.grad
         return {'obj': obj, 'dw': dw}

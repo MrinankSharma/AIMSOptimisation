@@ -1,5 +1,7 @@
 import torch
 
+import torch.nn.modules.loss as ll
+
 from objective.base import Objective
 from utils import accuracy
 
@@ -29,10 +31,13 @@ class SVM_SubGradient(SVM):
         self._validate_inputs(w, x, y)
         # regularization hyper-parameter
         mu = self.hparams.mu
-        # TODO: Compute objective value
-        obj = None
-        # TODO: compute subgradient
-        dw = None
+        # compute objective value
+        loss_obj = ll.MultiMarginLoss()
+        act = torch.matmul(x, w)
+        obj = loss_obj.forward(act, y)
+        # compute subgradient
+        obj.backward()
+        dw = w.grad
 
         return {'obj': obj, 'dw': dw}
 
