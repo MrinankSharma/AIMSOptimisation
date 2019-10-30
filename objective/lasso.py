@@ -21,7 +21,7 @@ class Lasso_subGradient(Lasso):
     def task_error(self, w, x, y):
         self._validate_inputs(w, x, y)
         # TODO: Compute mean squared error
-        error = None
+        error = torch.mean(torch.pow(torch.mm(x, w) - y.view(-1, 1), 2))
         return error
 
     def oracle(self, w, x, y):
@@ -29,17 +29,18 @@ class Lasso_subGradient(Lasso):
         # regularization hyper-parameter
         mu = self.hparams.mu
         # TODO: Compute objective value
-        obj = None
+        obj = torch.mean(torch.pow(torch.mm(x, w) - y.view(-1, 1), 2)) + mu/2 * torch.sum(torch.abs(w))
         # TODO: compute subgradient
-        dw = None
+        N = y.size()[0]
+        d = x.size()[1]
+        dw = 2/N * torch.mm((torch.mm(x.T, x)), w) - (2/N * torch.mm(x.T, y.view(-1, 1))) + ((mu/2) * torch.sign(w))
         return {'obj': obj, 'dw': dw}
 
 
 class SmoothedLasso_Gradient(Lasso):
     def task_error(self, w, x, y):
         self._validate_inputs(w, x, y)
-        # TODO: Compute mean squared error
-        error = None
+        error = torch.mean(torch.pow(torch.mm(x, w) - y.view(-1, 1), 2))
         return error
 
     def oracle(self, w, x, y):
@@ -48,8 +49,10 @@ class SmoothedLasso_Gradient(Lasso):
         mu = self.hparams.mu
         # temperature parameter
         temp = self.hparams.temp
-        # TODO: Compute objective value
-        obj = None
+        N = y.size()[0]
+        d = x.size()[1]
+        ell_1_approx = torch.sum(temp * torch.logsumexp(torch.cat([w, -w], 1) / temp, 1))
+        obj = torch.mean(torch.pow(torch.mm(x, w) - y.view(-1, 1), 2)) + mu/2 * ell_1_approx
         # TODO: compute gradient
-        dw = None
+        dw = 2/N * torch.mm((torch.mm(x.T, x)), w) - (2/N * torch.mm(x.T, y.view(-1, 1))) + mu/2 * torch.tanh(w/temp)
         return {'obj': obj, 'dw': dw}

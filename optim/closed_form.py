@@ -13,8 +13,9 @@ class HParamsClosedForm(HParams):
 
 class VariablesClosedForm(Variable):
     def init(self):
-        # TODO: Compute size
-
+        # Compute size
+        d = self.hparams.n_features
+        size = (d, 1)
         assert isinstance(size, tuple)
         # Will contain the weights
         self.w = torch.zeros(size, requires_grad=True)
@@ -41,4 +42,7 @@ class ClosedForm(Optimizer):
 
         # solution given by oracle
         sol = oracle_info['sol']
-        # TODO: Update self.variables.w
+        # Update self.variables.w
+        print(self.variables.w)
+        print(sol)
+        self.variables.w = sol

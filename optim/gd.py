@@ -26,8 +26,9 @@ class VariablesGD(Variable):
         super(VariablesGD, self).__init__(hparams)
 
     def init(self):
-        # TODO: Compute size
-
+        # Compute size
+        d = self.hparams.n_features
+        size = (d, 1)
         assert isinstance(size, tuple)
         # Will contain the weights
         self.w = torch.rand(size, requires_grad=True)
@@ -65,7 +66,17 @@ class GD(Optimizer):
         fix_lr = self.hparams.fix_lr
         # gradient given by oracle
         dw = oracle_info['dw']
+
+        # if the lr is not fixed
+        if not fix_lr:
+            self.variables.lr = init_lr * (torch.sqrt(self.variables.it) ** -1)
+        else:
+            self.variables.lr = init_lr
+
         # TODO: Update self.variables.w, self.variables.lr and self.variables.it
+        self.variables.w = self.variables.w - self.variables.lr * dw
+
+        self.variables.it = self.variables.it + 1
 
 
 class SGD(GD):
